@@ -1,7 +1,7 @@
 library(shiny)
 library(readr)
 library(DT) # librairie pour affichage tableau : https://rstudio.github.io/DT
-library(DBI)
+library(DBI) #librairie pour utiliser SQL
 library(shinydashboard)
 library(ggplot2)
 library(scales)
