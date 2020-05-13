@@ -25,6 +25,9 @@ nba <- mutate(nba, moypts = round(nba$PTS / nba$G, 1), moyreb = round(nba$TRB / 
 #Et classement en fonction de l'année
 nba <- nba %>% arrange(desc(SeasonStart))
 
+#Recodage de la variable année en facteur
+
+
 
 
 ui = dashboardPage(
@@ -37,11 +40,12 @@ ui = dashboardPage(
     sidebarMenu(
       menuItem("Qui sont les meilleurs joueurs ?",
                tabName = "meilleurs"
-      )
+      ),#Deuxième onglet
+      menuItem("Statistiques pour chaque joueur", tabName="stat_joueur")
     )
   ),
   dashboardBody(
-    tabItems(
+    tabItems(         #Forme du première onglet
       tabItem("meilleurs",
               box(
                 width = 4,
@@ -65,7 +69,35 @@ ui = dashboardPage(
               )
               
               
+      ), #Forme du deuxième onglet
+      tabItem("stat_joueur",
+              box(
+                width = 4,
+                selectInput("joueur",
+                            "Choix du joueur",
+                            choices = c(
+                              "Choisir un joueur",
+                              unique(nba$PlayerName)
+                            ))
+                  ),
+              infoBox(
+                title = "Meilleur saison en points par match",
+                value = textOutput("point_joueur"),
+                subtitle = "Moyenne Pts/Match",
+                icon = icon("line-chart"),
+                fill = TRUE,
+                color = "blue",
+                width = 5
+              ),
+              box(
+                title = "Evolution de la moyenne des points par match",
+                plotOutput("player_points"),
+                width = 7
+              )
+              
+              
       )
+  
     ) 
   ),
   title = "titre dans le navigateur",
@@ -118,7 +150,31 @@ server <- function(input, output) {
              "Rebonds par match" = moyreb)
   })
   
-
+  # Recupération du joueur choisi par l'utilisateur
+  joueur_choisi = reactive({
+    if (input$joueur == "Choisir un joueur") {
+      player = nba %>% filter(nba$PlayerName %in% "Russell Westbrook")
+    } else {
+      player = nba %>% filter(nba$PlayerName %in% input$joueur)
+    }
+    player
+  })
+  
+  # Affichage graphique du nombre de points par match pour le joueur choisi
+  output$player_points = renderPlot({
+    joueur_choisi1=joueur_choisi()
+    NBA_joueur = nba %>% filter(PlayerName %in% joueur_choisi1$PlayerName) %>% arrange(SeasonStart)
+    plot(NBA_joueur$SeasonStart, NBA_joueur$moypts, main="Moyenne des points par match", xlab="Saison", ylab="Moy points")
+  })
+  
+#  output$player_points = renderText({
+  #    joueur_choisi1=joueur_choisi()
+  #    meilleur_moyenne = nba %>% filter(PlayerName %in% joueur_choisi1$PlayerName) %>% arrange(desc(moypts)) %>% slice(1:2)
+  #    paste(meilleur_moyenne$moypts, "est la meilleur moyenne de points par match de", meilleur_moyenne$PlayerName)
+    
+  #  })
+  
+  
 }
 
 # Run the application 
