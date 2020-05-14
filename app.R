@@ -48,7 +48,7 @@ ui = dashboardPage(
     tabItems(         #Forme du première onglet
       tabItem("meilleurs",
               box(
-                width = 4,
+                width = 3,
                 selectInput("saison",
                             "Choix de la saison",
                             choices = c(
@@ -59,14 +59,36 @@ ui = dashboardPage(
               tabBox(title = "Classement",
                      width = 4,
                      tabPanel(title = "Points",
-                              tableOutput("classement_points")
+                              tableOutput("classement_points"),
+                              img(src='kobe.png',style="margin:-475px -350px", height = 600, width = 350)
                      ),
                      tabPanel(title = "Passes decisives",
-                              tableOutput("classement_pad")
+                              tableOutput("classement_pad"),
+                              img(src='irving.png',style="margin:-550px -350px", height = 600, width = 400)
                     ),
                     tabPanel(title = "Rebonds",
-                             tableOutput("classement_reb"))
+                             tableOutput("classement_reb"),
+                            img(src='shaq.png',style="margin:-475px -400px", height = 600, width = 450)
+                            )
+              ),
+              infoBox( 
+                title ="Anecdote",
+                width = 5,
+                value = tags$p("Mr. Triple Double", style = "font-size: 150%;"), 
+                subtitle = tags$p(textOutput("texte_td"), style = "font-size: 100%;"),
+                icon=icon("info"),
+                color = "red"
+              ),
+              
+              tabBox(title = "Performances Historiques", 
+                     width = 5,
+                     tabPanel(title = "Triple Double",
+                              tableOutput("triple_double")
+                     ),
+                     img(src='russwest.gif',style="display: block; margin-left: auto; margin-right: auto; width: 100%;",height = 250, width = 350)
+                     
               )
+              
               
               
       ), #Forme du deuxième onglet
@@ -173,7 +195,25 @@ server <- function(input, output) {
   #    paste(meilleur_moyenne$moypts, "est la meilleur moyenne de points par match de", meilleur_moyenne$PlayerName)
     
   #  })
-  
+  output$triple_double = renderTable({ 
+    only1=donnees()
+    nba %>% 
+      filter(moypts>=10 & moyreb>=10 & moypad>=10) %>% 
+      select(SeasonStart, PlayerName, moypts, moypad, moyreb) %>% 
+      arrange(desc(SeasonStart)) %>% 
+      rename("Saison" = SeasonStart,
+             "Joueur" = PlayerName,
+             "Points par match" = moypts,
+             "Passes decisives par match" = moypad,
+             "Rebonds par match" = moyreb)
+  })
+  output$texte_td = renderText({ 
+    paste("55 ans après Roberson, Westbrook devient le deuxième joueur de 
+          l'histoire a réaliser un triple double de moyenne sur une saison.
+          Performance qu'il reproduira l'année suivante, faisant de lui le seul joueur de l'histoire 
+          à réaliser un
+          'back-to-back triple double'")
+  })
   
 }
 
