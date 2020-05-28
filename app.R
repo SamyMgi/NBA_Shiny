@@ -129,7 +129,7 @@ ui = dashboardPage(
                             ))
               ),
               box(
-                title = "Comparaison des pourcentages de réussite",
+                title = div(img(src="nba.png",style="display: block; margin-left: auto; margin-right: auto; width: 40%; height: 40%")),
                 plotOutput("spiderweb"),
                 width = 4
               ),
