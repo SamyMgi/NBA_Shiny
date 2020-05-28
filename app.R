@@ -55,8 +55,7 @@ nba$SeasonStart=as.character(nba$SeasonStart)
 ui = dashboardPage(
   
   dashboardHeader(
-    title = "NBA",
-    titleWidth =  300
+    title = div(img(src="nba.png",style="display: block; margin-left: auto; margin-right: auto; width: 60%;",height = 50))
   ),
   dashboardSidebar(
     #Premier onglet
