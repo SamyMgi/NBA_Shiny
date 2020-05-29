@@ -17,7 +17,7 @@ library(questionr)
 #Importation données
 smp = read_csv(file = "nbaNew.csv")
 
-#Enlever les 5 dernieres lignes : contenants beaucoup de virgules mais sans données
+#Enlever les 5 dernieres lignes : contenants beaucoup de virgules mais sans donnÃ©es
 nbligne=nrow(smp)
 nblignebis=nbligne-5
 nba=smp[-c(nblignebis:nbligne),]
@@ -63,10 +63,10 @@ ui = dashboardPage(
       menuItem("Statistiques descriptives",
                tabName = "joueurs",
                icon = icon("futbol")
-      ),#Deuxi�me onglet
+      ),#Deuxième onglet
       menuItem("Qui sont les meilleurs joueurs ?",
                tabName = "meilleurs"
-      ),#Troisi�me onglet
+      ),#Troisième onglet
       menuItem("Statistiques pour chaque joueur", tabName="stat_joueur")
     )
   ),
