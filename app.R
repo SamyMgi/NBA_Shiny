@@ -11,23 +11,24 @@ library(dbConnect)
 library(plotly)
 library(fmsb)
 library(questionr)
+library(magrittr)
 
 #nba <- read.csv2("nbaNew.csv", sep=",")
 
 #Importation données
 smp = read_csv(file = "nbaNew.csv")
 
-#Enlever les 5 dernieres lignes : contenants beaucoup de virgules mais sans donnÃ©es
+#Enlever les 5 dernieres lignes : contenants beaucoup de virgules mais sans données
 nbligne=nrow(smp)
 nblignebis=nbligne-5
 nba=smp[-c(nblignebis:nbligne),]
 
 #Palette de couleurs pour le radar plot
-colors_border=c( rgb(0.2,0.5,0.5,0.9), rgb(0.8,0.2,0.5,0.9) , rgb(0.7,0.5,0.1,0.9) )
-colors_in=c( rgb(0.2,0.5,0.5,0.4), rgb(0.8,0.2,0.5,0.4) , rgb(0.7,0.5,0.1,0.4) )
+colors_border=c( rgb(0.2,0.5,0.8,0.9), rgb(1,0,0,0.6) , rgb(0.7,0.5,0.1,0.9) )
+colors_in=c( rgb(0.2,0.5,0.8,0.4), rgb(1,0,0,0.3) , rgb(0.7,0.5,0.1,0.4) )
 
 
-#Création des colonnes moyennes (Points, Rebonds, Passes décisives)
+#Création des colonnes moyennes (Points, Rebonds, Passes dÃ©cisives)
 nba <- mutate(nba, moypts = round(nba$PTS / nba$G, 1), moyreb = round(nba$TRB / nba$G, 1), moypad = round(nba$AST / nba$G, 1))
 
 #Et classement en fonction de l'année
@@ -58,17 +59,28 @@ ui = dashboardPage(
     title = div(img(src="nba.png",style="display: block; margin-left: auto; margin-right: auto; width: 60%;",height = 50))
   ),
   dashboardSidebar(
-    #Premier onglet
     sidebarMenu(
-      menuItem("Statistiques descriptives",
+      menuItem("Description",#Premier onglet
+               tabName = "description",
+               icon = icon("info")),
+      
+      menuItem("Statistiques descriptives",#Deuxième onglet
                tabName = "joueurs",
-               icon = icon("futbol")
-      ),#Deuxième onglet
-      menuItem("Qui sont les meilleurs joueurs ?",
-               tabName = "meilleurs"
-      ),#Troisième onglet
-      menuItem("Statistiques pour chaque joueur", tabName="stat_joueur")
-    )
+               icon = icon("table")
+      ),
+      menuItem("Qui sont les meilleurs joueurs ?",#Troisème onglet
+               tabName = "meilleurs",
+               icon = icon("medal")
+      ),
+      menuItem("Comparez-les !", #Quatrième onglet
+               tabName = "comp_joueurs",
+               icon = icon("not-equal")
+      ),
+      menuItem("Statistiques pour chaque joueur", #Cinquième onglet
+               tabName="stat_joueur",
+               icon = icon("chart-line")
+               )
+              )
   ),
   dashboardBody(
     tabItems(         #Forme du premier onglet
@@ -104,7 +116,8 @@ ui = dashboardPage(
                 value = tags$p("Mr. Triple Double", style = "font-size: 150%;"), 
                 subtitle = tags$p(textOutput("texte_td"), style = "font-size: 100%;"),
                 icon=icon("info"),
-                color = "red"
+                color = "red",
+                fill = TRUE
               ),
               
               tabBox(title = "Performances Historiques", 
@@ -114,43 +127,51 @@ ui = dashboardPage(
                      ),
                      img(src='russwest.gif',style="display: block; margin-left: auto; margin-right: auto; width: 100%;",height = 250, width = 350)
                      
-              )),
-              fluidRow(
-                infoBox( 
-                  title =" ",
-                  width = 13,
-                  value = tags$p("Qui est le meilleur tireur ? A vous de comparer !", style = "font-size: 150%;"), 
-                  icon=icon("percent"),
-                  color = "blue"
-                ),
-              box(
-                width = 4,
-                selectInput("joueur1",
-                            "Choisissez un premier joueur",
-                            choices = c(
-                              "Tous les joueurs",
-                              unique(nba$PlayerName)
-                            ))
-              ),
-              box(
-                title = div(img(src="nba.png",style="display: block; margin-left: auto; margin-right: auto; width: 40%; height: 40%")),
-                plotOutput("spiderweb"),
-                width = 4
-              ),
-              box(
-                width = 4,
-                selectInput("joueur2",
-                            "Choisissez un second joueur",
-                            choices = c(
-                              "Tous les joueurs",
-                              unique(nba$PlayerName)
-                            )))
-              )
+              ))
               
               
               
               
       ), #Forme du deuxième onglet
+      tabItem("comp_joueurs",
+               fluidRow(
+                 infoBox( 
+                   title =" ",
+                   width = 12,
+                   value = tags$p("Qui est le meilleur tireur ? A vous de comparer !", style = "font-size: 150%;"), 
+                   icon=icon("percent"),
+                   color = "green",
+                   fill = TRUE
+                 ),
+                 box(
+                   width = 4,
+                   selectInput("joueur1",
+                               tags$p("Choisissez un premier joueur", style = "color:blue; font-size: 120%;"),
+                               choices = c(
+                                 "Tous les joueurs",
+                                 unique(nba$PlayerName)
+                               )),
+                   img(src='james.png',style="margin:0px 0px", height = 600, width = 450)
+                 ),
+                 box(
+                   title = div(img(src="nba.png",style="display: block; margin-left: auto; margin-right: auto; width: 40%; height: 40%")),
+                   plotOutput("spiderweb"),
+                   width = 4
+                 ),
+                 box(
+                   width = 4,
+                   selectInput("joueur2",
+                               tags$p("Choisissez un second joueur", style = "color:red; font-size: 120%;"),
+                               choices = c(
+                                 "Tous les joueurs",
+                                 unique(nba$PlayerName)
+                               )),
+                   img(src='curry.png',style="margin:0px 0px", height = 600, width = 450)
+                   )
+                 
+               )
+               ),
+      #Forme du troisième onglet
       tabItem("stat_joueur",
               box(
                 width = 4,
