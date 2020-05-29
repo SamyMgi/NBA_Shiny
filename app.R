@@ -60,9 +60,13 @@ ui = dashboardPage(
   dashboardSidebar(
     #Premier onglet
     sidebarMenu(
+      menuItem("Statistiques descriptives",
+               tabName = "joueurs",
+               icon = icon("futbol")
+      ),#Deuxième onglet
       menuItem("Qui sont les meilleurs joueurs ?",
                tabName = "meilleurs"
-      ),#DeuxiÃ¨me onglet
+      ),#Troisième onglet
       menuItem("Statistiques pour chaque joueur", tabName="stat_joueur")
     )
   ),
