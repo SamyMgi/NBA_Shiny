@@ -3,6 +3,8 @@ library(readr)
 library(DT) # librairie pour affichage tableau : https://rstudio.github.io/DT
 library(DBI) #librairie pour utiliser SQL
 library(shinydashboard)
+library(tidyverse)
+library(tidyr)
 library(ggplot2)
 library(scales)
 library(forcats)
@@ -12,6 +14,7 @@ library(plotly)
 library(fmsb)
 library(questionr)
 library(magrittr)
+library(gghighlight)
 
 #nba <- read.csv2("nbaNew.csv", sep=",")
 
@@ -173,8 +176,10 @@ ui = dashboardPage(
                ),
       #Forme du troisième onglet
       tabItem("stat_joueur",
+            fluidRow(
+              column(width = 6, 
               box(
-                width = 4,
+                width = NULL,
                 selectInput("joueur",
                             "Choix du joueur",
                             choices = c(
@@ -186,18 +191,36 @@ ui = dashboardPage(
                 title = "Meilleur saison en points par match",
                 value = textOutput("point_joueur"),
                 subtitle = "Moyenne Pts/Match",
-                icon = icon("line-chart"),
+                icon = icon("basketball-ball"),
                 fill = TRUE,
                 color = "blue",
-                width = 5
+                width = NULL
               ),
+              infoBox(
+                title = "Meilleur saison en assists par match",
+                value = textOutput("assist_joueur"),
+                subtitle = "Moyenne Pad/Match",
+                icon = icon("hands-helping"),
+                fill = TRUE,
+                color = "red",
+                width = NULL
+              ), infoBox(
+                title = "Meilleur saison en rebonds par match",
+                value = textOutput("rebond_joueur"),
+                subtitle = "Moyenne Rbs/Match",
+                icon = icon("arrows-alt-v"),
+                fill = TRUE,
+                color = "green",
+                width = NULL
+              ))
+              ,column(width = 6,
               box(
-                title = "Evolution de la moyenne des points par match",
-                plotOutput("player_points"),
-                width = 7
-              )
+                title = "Performance en moyenne par match",
+               plotOutput("player_points"),
+                width = NULL
+              ))
               
-              
+            )     
       )
   
     ) 
@@ -283,10 +306,40 @@ server <- function(input, output) {
   
   # Affichage graphique du nombre de points par match pour le joueur choisi
   output$player_points = renderPlot({
+    #Creation table avec le joueur choisi
     joueur_choisi1=joueur_choisi()
-    NBA_joueur = nba %>% filter(PlayerName %in% joueur_choisi1$PlayerName) %>% arrange(SeasonStart)
-    plot(NBA_joueur$SeasonStart, NBA_joueur$moypts, main="Moyenne des points par match", xlab="Saison", ylab="Moy points")
+    NBA_joueur = nba %>% filter(PlayerName %in% joueur_choisi1$PlayerName) %>%  select(SeasonStart, moypts, moyreb, moypad) %>%  gather(key = "variable", value= "value", -SeasonStart)
+    ggplot(NBA_joueur, aes(SeasonStart, value, group=variable))+
+        geom_line(aes(color=variable, linetype=variable))+
+        labs(x = "Année", y="Moyenne de la variable choisie par match (points, assists ou rebonds)") +
+        theme(legend.position ="right")+
+      geom_point(aes(group = seq_along(SeasonStart)))+
+      scale_linetype_manual(values=c("longdash", "solid", "twodash"))+
+      scale_color_manual(values=c('red','black', 'blue'))
+    })
+    
+  
+  #Création de deux infobox qui indiquent les meilleurs statistiques pour le joueur choisi
+  output$point_joueur = renderText({
+    joueur_choisi1=joueur_choisi()
+    NBA_joueur = nba %>% filter(PlayerName %in% joueur_choisi1$PlayerName) %>%  select(SeasonStart, moypts, moyreb, moypad) %>% arrange(desc(moypts)) %>% slice(1:1)
+    paste(NBA_joueur$moypts, "Points par match pour la saison", NBA_joueur$SeasonStart)
   })
+  
+  output$assist_joueur = renderText({
+    joueur_choisi1=joueur_choisi()
+    NBA_joueur = nba %>% filter(PlayerName %in% joueur_choisi1$PlayerName) %>%  select(SeasonStart, moypts, moyreb, moypad) %>% arrange(desc(moypad)) %>% slice(1:1)
+    paste(NBA_joueur$moypad, "Points par match pour la saison", NBA_joueur$SeasonStart)
+  })
+  
+  output$rebond_joueur = renderText({
+    joueur_choisi1=joueur_choisi()
+    NBA_joueur = nba %>% filter(PlayerName %in% joueur_choisi1$PlayerName) %>%  select(SeasonStart, moypts, moyreb, moypad) %>% arrange(desc(moyreb)) %>% slice(1:1)
+    paste(NBA_joueur$moyreb, "Points par match pour la saison", NBA_joueur$SeasonStart)
+  })
+  
+  
+  
   
   #Représentation des triple double de moyenne
   output$triple_double = renderTable({ 
