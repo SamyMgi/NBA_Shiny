@@ -86,7 +86,40 @@ ui = dashboardPage(
               )
   ),
   dashboardBody(
-    tabItems(         #Forme du premier onglet
+    tabItems(    
+      tabItem("joueurs",
+              fluidRow(
+                tags$h2("Application SHINY sur la NBA !"),
+                tags$div(
+                  HTML(paste(tags$blockquote("Ici, on retrouve toutes les donnees des joueurs de la NBA depuis XXXX. Cette application est destinee pour les fan ou encore pour les curieux qui voudraient en apprendre davantage sur les caracteristiques et performance des", tags$span(style="color:red", "joueurs"), sep = "")))
+                ),
+                box(
+                  selectInput("club",
+                              "Choisir un club",
+                              choices = sort(unique(smp$Tm))
+                  )
+                ),
+                
+                box(
+                  selectInput("saison",
+                              "Choisir une saison",
+                              choices = sort(unique(smp$SeasonStart))
+                  )
+                ),
+                tabBox(
+                  tabPanel(title = "Statistiques des joueurs",
+                           dataTableOutput("joueurs")
+                  ),
+                  width = 11
+                )
+                
+              ),
+              tags$div(
+                HTML(paste(tags$blockquote(tags$a(href="www.nba.com","SITE OFFICIEL DE LA", tags$span(style="color:red", "NBA"), sep = ""))))
+              )
+      ),
+      
+      #Forme du premier onglet
       tabItem("meilleurs",
               fluidRow(
               box(
@@ -230,6 +263,28 @@ ui = dashboardPage(
 )
 
 server <- function(input, output) {
+  
+  output$joueurs = renderDataTable({
+    table = smp %>% filter(Tm == input$club & SeasonStart == input$saison)
+    datatable(
+      data.frame(
+        table
+      ),
+      rownames = FALSE,
+      extensions = 'FixedColumns',
+      options = list(
+        dom = 'tip',
+        scrollX = TRUE,
+        fixedColumns = list(leftColumn = 1, rightColumns = 1)
+      )
+    ) %>%
+      formatStyle('PlayerName',
+                  color = 'white',
+                  backgroundColor = 'steelblue',
+                  fontWeight = 'bold')
+  })
+  
+  
   #Choix de la saison
   choix_saison = reactive({
     if (input$saison == "Toutes les saisons") {
