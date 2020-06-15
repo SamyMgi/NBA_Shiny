@@ -101,7 +101,7 @@ ui = dashboardPage(
                 ),
                 
                 box(
-                  selectInput("saison",
+                  selectInput("saison_desc",
                               "Choisir une saison",
                               choices = sort(unique(smp$SeasonStart))
                   )
@@ -265,7 +265,7 @@ ui = dashboardPage(
 server <- function(input, output) {
   
   output$joueurs = renderDataTable({
-    table = smp %>% filter(Tm == input$club & SeasonStart == input$saison)
+    table = smp %>% filter(Tm == input$club & SeasonStart == input$saison_desc)
     datatable(
       data.frame(
         table
