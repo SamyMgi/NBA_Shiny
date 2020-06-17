@@ -9,7 +9,7 @@ library(ggplot2)
 library(scales)
 library(forcats)
 library(dplyr)
-library(dbConnect)
+#library(dbConnect)
 library(plotly)
 library(fmsb)
 library(questionr)
@@ -18,10 +18,10 @@ library(gghighlight)
 
 #nba <- read.csv2("nbaNew.csv", sep=",")
 
-#Importation données
+#Importation donnÃ©es
 smp = read_csv(file = "nbaNew.csv")
 
-#Enlever les 5 dernieres lignes : contenants beaucoup de virgules mais sans données
+#Enlever les 5 dernieres lignes : contenants beaucoup de virgules mais sans donnÃ©es
 nbligne=nrow(smp)
 nblignebis=nbligne-5
 nba=smp[-c(nblignebis:nbligne),]
@@ -31,10 +31,10 @@ colors_border=c( rgb(0.2,0.5,0.8,0.9), rgb(1,0,0,0.6) , rgb(0.7,0.5,0.1,0.9) )
 colors_in=c( rgb(0.2,0.5,0.8,0.4), rgb(1,0,0,0.3) , rgb(0.7,0.5,0.1,0.4) )
 
 
-#Création des colonnes moyennes (Points, Rebonds, Passes dÃ©cisives)
+#CrÃ©ation des colonnes moyennes (Points, Rebonds, Passes dÃÂ©cisives)
 nba <- mutate(nba, moypts = round(nba$PTS / nba$G, 1), moyreb = round(nba$TRB / nba$G, 1), moypad = round(nba$AST / nba$G, 1))
 
-#Et classement en fonction de l'année
+#Et classement en fonction de l'annÃ©e
 nba <- nba %>% arrange(desc(SeasonStart))
 nba
 
@@ -45,7 +45,7 @@ nba <- rename.variable(nba, "3P%", "X3P")
 nba <- rename.variable(nba, "2P%", "X2P")
 nba <- rename.variable(nba, "FT%", "XFT")
 
-#Recodage des variables : caractère -> numérique
+#Recodage des variables : caractÃ¨re -> numÃ©rique
 nba$XFG<-as.numeric(gsub("%","",as.character(nba$XFG)))
 nba$XeFG<-as.numeric(gsub("%","",as.character(nba$XeFG)))
 nba$X3P<-as.numeric(gsub("%","",as.character(nba$X3P)))
@@ -67,22 +67,26 @@ ui = dashboardPage(
                tabName = "description",
                icon = icon("info")),
       
-      menuItem("Statistiques descriptives",#Deuxième onglet
+      menuItem("Statistiques descriptives",#DeuxiÃ¨me onglet
                tabName = "joueurs",
                icon = icon("table")
       ),
-      menuItem("Qui sont les meilleurs joueurs ?",#Troisème onglet
+      menuItem("Qui sont les meilleurs joueurs ?",#TroisÃ¨me onglet
                tabName = "meilleurs",
                icon = icon("medal")
       ),
-      menuItem("Comparez-les !", #Quatrième onglet
+      menuItem("Comparez-les !", #QuatriÃ¨me onglet
                tabName = "comp_joueurs",
                icon = icon("not-equal")
       ),
-      menuItem("Statistiques pour chaque joueur", #Cinquième onglet
+      menuItem("Statistiques pour chaque joueur", #CinquiÃ¨me onglet
                tabName="stat_joueur",
                icon = icon("chart-line")
-               )
+               ),
+      menuItem("Statistiques pour chaque équipe", #CinquiÃ¨me onglet
+               tabName="stat_equipe",
+               icon = icon("chart-line")
+      )
               )
   ),
   dashboardBody(
@@ -168,7 +172,7 @@ ui = dashboardPage(
               
               
               
-      ), #Forme du deuxième onglet
+      ), #Forme du deuxiÃ¨me onglet
       tabItem("comp_joueurs",
                fluidRow(
                  infoBox( 
@@ -207,7 +211,7 @@ ui = dashboardPage(
                  
                )
                ),
-      #Forme du troisième onglet
+      #Forme du troisiÃ¨me onglet
       tabItem("stat_joueur",
             fluidRow(
               column(width = 6, 
@@ -245,15 +249,99 @@ ui = dashboardPage(
                 fill = TRUE,
                 color = "green",
                 width = NULL
+              ),
+              infoBox( 
+                title ="Wilt Chamberlain, jamais égalé ?",
+                width = NULL,
+                value = tags$p("L'histoire du meilleur joueur des années 1970", style = "font-size: 150%;"), 
+                subtitle = tags$p(htmlOutput("wilt"), style = "font-size: 100%;"),
+                color = "red",
+                icon=icon("info"),
+                fill = TRUE
               ))
               ,column(width = 6,
               box(
                 title = "Performance en moyenne par match",
                plotOutput("player_points"),
                 width = NULL
-              ))
+              ),
+              box(
+                img(src='chamberlain.gif',style="display: block; margin-left: auto; margin-right: auto; width: 100%;")))
               
             )     
+      ),
+      tabItem("stat_equipe",
+              fluidRow(
+                column(width = 6, 
+                       box(
+                         width = NULL,
+                         selectInput("Equipe",
+                                     "Choix de l'équipe",
+                                     choices = c(
+                                       "Choisir une équipe",
+                                       unique(nba$Tm)
+                                     ))
+                       ),
+                       infoBox(
+                         title = "Meilleur PF de l'histoire de l'équipe",
+                         value = textOutput("best_PF"),
+                         
+                         
+                         fill = TRUE,
+                         color = "blue",
+                         width = NULL
+                       ),
+                       infoBox(
+                         title = "Meilleur PG de l'histoire de l'équipe",
+                         value = textOutput("best_PG"),
+                         
+                         
+                         fill = TRUE,
+                         color = "blue",
+                         width = NULL
+                       ), infoBox(
+                         title = "Meilleur C de l'histoire de l'équipe",
+                         value = textOutput("best_C"),
+                         
+                         
+                         fill = TRUE,
+                         color = "blue",
+                         width = NULL
+                       ),infoBox(
+                         title = "Meilleur SG de l'histoire de l'équipe",
+                         value = textOutput("best_SG"),
+                         
+                         
+                         fill = TRUE,
+                         color = "blue",
+                         width = NULL
+                       ),
+                       infoBox(
+                         title = "Meilleur SF de l'histoire de l'équipe",
+                         value = textOutput("best_SF"),
+                         
+                         fill = TRUE,
+                         color = "blue",
+                         width = NULL
+                       ),infoBox( 
+                         title ="Explication",
+                         width = NULL,
+                         value = tags$p("Les postes", style = "font-size: 150%;"), 
+                         subtitle = tags$p(htmlOutput("poste_td"), style = "font-size: 100%;"),
+                         color = "red",
+                         icon=icon("info"),
+                         fill = TRUE
+                       )),
+                column(width = 6,
+                        box(
+                          title = "Poste qui a le plus marqué l'histoire de l'équipe",
+                          plotOutput("poste_points"),
+                          width = NULL
+                        ),
+                box(
+                    img(src='postes.gif',style="display: block; margin-left: auto; margin-right: auto; width: 100%;",height = 200, width = 50))
+                
+              ) )    
       )
   
     ) 
@@ -303,7 +391,7 @@ server <- function(input, output) {
     }
     onlyplayers
   })
-  #2ème choix de joueur pour le radarplot
+  #2Ã¨me choix de joueur pour le radarplot
   choix_joueur2 = reactive({
     if (input$joueur2 == "Tous les joueurs") {
       onlyplayers2 = nba %>% filter(nba$PlayerName=="Kobe Bryant")
@@ -374,7 +462,7 @@ server <- function(input, output) {
     })
     
   
-  #Création de deux infobox qui indiquent les meilleurs statistiques pour le joueur choisi
+  #CrÃ©ation de deux infobox qui indiquent les meilleurs statistiques pour le joueur choisi
   output$point_joueur = renderText({
     joueur_choisi1=joueur_choisi()
     NBA_joueur = nba %>% filter(PlayerName %in% joueur_choisi1$PlayerName) %>%  select(SeasonStart, moypts, moyreb, moypad) %>% arrange(desc(moypts)) %>% slice(1:1)
@@ -396,7 +484,7 @@ server <- function(input, output) {
   
   
   
-  #Représentation des triple double de moyenne
+  #ReprÃ©sentation des triple double de moyenne
   output$triple_double = renderTable({ 
     nba %>% 
       filter(moypts>=10 & moyreb>=10 & moypad>=10) %>% 
@@ -410,10 +498,10 @@ server <- function(input, output) {
   })
   #Case anecdote sur le Triple Double
   output$texte_td = renderText({ 
-    paste("55 ans après Robertson, Westbrook devient le deuxième joueur de 
-          l'histoire a réaliser un triple double de moyenne sur une saison.
-          Performance qu'il reproduira l'année suivante, faisant de lui le seul joueur de l'histoire 
-          à réaliser un
+    paste("55 ans aprÃ¨s Robertson, Westbrook devient le deuxiÃ¨me joueur de 
+          l'histoire a rÃ©aliser un triple double de moyenne sur une saison.
+          Performance qu'il reproduira l'annÃ©e suivante, faisant de lui le seul joueur de l'histoire 
+          Ã  rÃ©aliser un
           'back-to-back triple double'.")
   })
   #Radar plot 
@@ -436,6 +524,82 @@ server <- function(input, output) {
     )
     
   })
+  
+  
+  #Partie 5 __ Choix équipe, plot des points par poste:
+  #Récuperation Equipe choisie
+  equipe_choisi = reactive({
+    if (input$Equipe == "Choisir un joueur") {
+      team = nba %>% filter(nba$Tm %in% "GSW")
+    } else {
+      team = nba %>% filter(nba$Tm %in% input$Equipe)
+    }
+    team
+  })
+  
+  #Graphique des points par poste:
+  output$poste_points = renderPlot({
+    Team1=equipe_choisi()
+    NBA_equipe = nba %>% filter(Tm %in% Team1$Tm & Pos %in% c("PF", "PG", "SF", "C", "SG"))
+    ggplot(NBA_equipe, aes(Pos, moypts, fill=Pos))+
+      geom_bar(stat="identity", width=1)+
+      coord_polar()+
+      labs(x = "Position", y="Points par match") +
+      theme(legend.position ="right")
+    
+  })
+  
+  output$best_C = renderText({
+    Team1=equipe_choisi()
+    NBA_equipe = nba %>% filter(Tm %in% Team1$Tm & Pos =="C") %>%  group_by(PlayerName) %>% summarise(n=n(), TotalP= sum(PTS)) %>% arrange(desc(TotalP)) %>% slice(1:1)
+    paste(NBA_equipe$TotalP, "Points marqués par ", NBA_equipe$PlayerName, " en ", NBA_equipe$n, "saisons")
+  })
+  output$best_PF = renderText({
+    Team1=equipe_choisi()
+    NBA_equipe = nba %>% filter(Tm %in% Team1$Tm & Pos =="PF") %>%  group_by(PlayerName) %>% summarise(n=n(), TotalP= sum(PTS)) %>% arrange(desc(TotalP)) %>% slice(1:1)
+    paste(NBA_equipe$TotalP, "Points marqués par ", NBA_equipe$PlayerName, " en ", NBA_equipe$n, "saisons")
+  })
+  output$best_PG = renderText({
+    Team1=equipe_choisi()
+    NBA_equipe = nba %>% filter(Tm %in% Team1$Tm & Pos =="PG") %>%  group_by(PlayerName) %>% summarise(n=n(), TotalP= sum(PTS)) %>% arrange(desc(TotalP)) %>% slice(1:1)
+    paste(NBA_equipe$TotalP, "Points marqués par ", NBA_equipe$PlayerName, " en ", NBA_equipe$n, "saisons")
+  })
+  output$best_SG = renderText({
+    Team1=equipe_choisi()
+    NBA_equipe = nba %>% filter(Tm %in% Team1$Tm & Pos =="SG") %>%  group_by(PlayerName) %>% summarise(n=n(), TotalP= sum(PTS)) %>% arrange(desc(TotalP)) %>% slice(1:1)
+    paste(NBA_equipe$TotalP, "Points marqués par ", NBA_equipe$PlayerName, " en ", NBA_equipe$n, "saisons")
+  })
+  output$best_SF = renderText({
+    Team1=equipe_choisi()
+    NBA_equipe = nba %>% filter(Tm %in% Team1$Tm & Pos =="SF") %>%  group_by(PlayerName) %>% summarise(n=n(), TotalP= sum(PTS)) %>% arrange(desc(TotalP)) %>% slice(1:1)
+    paste(NBA_equipe$TotalP, "Points marqués par ", NBA_equipe$PlayerName, " en ", NBA_equipe$n, "saisons")
+  })
+  
+  #Box explication des postes
+  output$poste_td = renderUI({ 
+    p1 = paste("Au basket, il existe 5 postes :")
+    p2= paste("-Meneur ou PG : Il guide le jeu, annonce les systèmes et impose le rythme")
+    p3= paste("-Arrière ou SG : Son rôle est de tirer à l'exterieur de la raquette, notamment à trois points")
+    p4= paste("-Ailier ou SF : Il s'agit d'un joueur polyvalent qui peut aussi bien tirer que pénétrer dans la raquette")
+    p5= paste("-Ailier Fort ou PF : Il a principalement un jeu défensif, mais peut assister le pivot en attaque")
+    p6= paste("-Pivot ou C :  C'est le joueur le plus grand, il joue dans la raquette et récupère des rebonds")
+    
+    HTML(paste(p1,p2,p3,p4,p5,p6, sep="<br/>"))
+  })
+  
+  #Box explication Perf de Wilt
+  output$wilt = renderUI({
+    p0=paste("")
+    p1= paste("Wilt Chamberlain a joué en NBA des années 1960 jusqu'en 1973. En 15 saisons, il a marqué la NBA pour des décénnies.")
+    p2= paste("En effet, il s'agit du seul joueur à atteindre 50 points par match en moyenne. Il détient par ailleurs les 3 premières places au classement des meilleurs saisons en points par match.")
+    p3= paste("Mais au-delà des points, il est également le seul à obtenir plus de 25 rebonds par match en moyenne. Pour comparer, en 2019, le meilleur rebondeur avait 15 rebonds par match.")
+    p4=paste("Précision: Dans les années 60, il était possible d'arrêter un tir même durant sa phase descendante, augmentant le nombre de rebonds défensifs. Désormais, cela est interdit.")
+    p5= paste("Ses records seront-t-ils menacé un jour ?")
+    HTML(paste(p1,p0, p2,p0, p3,p0, p4,p5, sep="<br/>"))
+    
+  })
+  
+  
   
 }
 
