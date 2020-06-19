@@ -34,6 +34,9 @@ colors_in=c( rgb(0.2,0.5,0.8,0.4), rgb(1,0,0,0.3) , rgb(0.7,0.5,0.1,0.4) )
 #CrÃ©ation des colonnes moyennes (Points, Rebonds, Passes dÃÂ©cisives)
 nba <- mutate(nba, moypts = round(nba$PTS / nba$G, 1), moyreb = round(nba$TRB / nba$G, 1), moypad = round(nba$AST / nba$G, 1))
 
+#Création bdd avec uniquement les 32 équipes actuelles pour l'onglet stat par équipe
+nba_teamactuel = nba  %>% filter(Tm %in% c("ATL", "BRK", "BOS", "CHA","CHI","CLE","DAL", "DEN", "DET", "GSW", "HOU", "IND", "LAC", "LAL", "MEM", "MIA", "MIL", "MIN", "NOP", "NYK", "OKC", "ORL", "PHI", "PHX", "POR", "SAC", "SAS", "TOR", "UTA", "WAS"))
+
 #Et classement en fonction de l'annÃ©e
 nba <- nba %>% arrange(desc(SeasonStart))
 nba
@@ -279,7 +282,7 @@ ui = dashboardPage(
                                      "Choix de l'équipe",
                                      choices = c(
                                        "Choisir une équipe",
-                                       unique(nba$Tm)
+                                       sort(unique(nba_teamactuel$Tm))
                                      ))
                        ),
                        infoBox(
@@ -339,7 +342,11 @@ ui = dashboardPage(
                           width = NULL
                         ),
                 box(
-                    img(src='postes.gif',style="display: block; margin-left: auto; margin-right: auto; width: 100%;",height = 200, width = 50))
+                    img(src='postes.gif',style="display: block; margin-left: auto; margin-right: auto; width: 100%;",height = 200, width = 50)),
+                box(
+                  uiOutput(outputId = "logo"),
+                  width = 4
+                )
                 
               ) )    
       )
@@ -530,7 +537,7 @@ server <- function(input, output) {
   #Récuperation Equipe choisie
   equipe_choisi = reactive({
     if (input$Equipe == "Choisir un joueur") {
-      team = nba %>% filter(nba$Tm %in% "GSW")
+      team = ""
     } else {
       team = nba %>% filter(nba$Tm %in% input$Equipe)
     }
@@ -599,6 +606,18 @@ server <- function(input, output) {
     
   })
   
+  #Un logo par équipe
+  
+  output$logo = renderUI({
+    Team1=equipe_choisi()
+    if (Team1 == "") {
+      img(src = "NBA_white.jpg", height="200px", width = "200px")
+    } else{
+      Choix_equipe = unique(Team1$Tm)
+      photo = paste(Choix_equipe, ".png", sep="")
+      img(src = photo, height="200px", width = "200px")
+    }
+  })
   
   
 }
