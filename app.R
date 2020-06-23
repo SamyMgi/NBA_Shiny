@@ -114,10 +114,10 @@ ui = dashboardPage(
                 ),
                 tabBox(title = "Informations",
                        width = 4,
-                       tabPanel(title = "Age moyen des joueurs en NBA",
+                       tabPanel(title = "Info sur l'âge de l'équipe",
                                 tableOutput("info_age")
                        ),
-                       tabPanel(title = "Salaire median des joueurs en NBA",
+                       tabPanel(title = "Info sur le salaire de l'équipe",
                                 tableOutput("info_salaire")
                        )
                 ),
@@ -380,30 +380,8 @@ ui = dashboardPage(
 
 server <- function(input, output) {
   
-  #Onglet 1, choix saison et club
-  
-  Onglet1_saison = reactive({
-    if (input$saison_desc == "") {
-      OngletS = nba %>%  filter(nba$SeasonStart == 1950)
-    } else {
-      OngletS = nba %>% filter(nba$SeasonStart == input$saison_desc)
-    }
-    OngletS
-  })
-  
-  Onglet1_club = reactive({
-    if (input$club == "") {
-      OngletC = nba %>%  filter(nba$Tm == "AND")
-    } else {
-      OngletC = nba %>% filter(nba$Tm == input$club)
-    }
-    OngletC
-  })
-  
   output$description = renderDataTable({
-    Saison = Onglet1_saison()
-    Club = Onglet1_club()
-    table = nba %>% filter(nba$SeasonStart == Saison$SeasonStart && nba$Tm == Club$Tm) %>%  select(-`#`, -SeasonStart) %>% arrange(desc(moypts))
+    table = nba %>% filter(SeasonStart == input$saison_desc & Tm == input$club) %>%  select(-`#`, -SeasonStart) %>% arrange(desc(moypts))
     datatable(
       data.frame(
         table
@@ -431,25 +409,27 @@ server <- function(input, output) {
   })
   
   output$info_age = renderTable({
+    nba2= nba %>% filter(SeasonStart == input$saison_desc & Tm == input$club)
     data.frame(
       Statistique = c("Minimum", "Moyenne", "Mediane", "Maximum"),
       Valeur = c(
-        min(nba$Age, na.rm = T),
-        mean(nba$Age, na.rm = T),
-        median(nba$Age, na.rm = T),
-        max(nba$Age, na.rm = T)
+        min(nba2$Age, na.rm = T),
+        mean(nba2$Age, na.rm = T),
+        median(nba2$Age, na.rm = T),
+        max(nba2$Age, na.rm = T)
       )
     )
   })
   
   output$info_salaire = renderTable({
+    nba2= nba %>% filter(SeasonStart == input$saison_desc & Tm == input$club)
     data.frame(
       Statistique = c("Minimum", "Moyenne", "Médiane", "Maximum"),
       Valeur = c(
-        min(nba$PlayerSalary, na.rm = T),
-        mean(nba$PlayerSalary, na.rm = T),
-        median(nba$PlayerSalary, na.rm = T),
-        max(nba$PlayerSalary, na.rm = T)
+        min(nba2$PlayerSalary, na.rm = T),
+        mean(nba2$PlayerSalary, na.rm = T),
+        median(nba2$PlayerSalary, na.rm = T),
+        max(nba2$PlayerSalary, na.rm = T)
       )
     )
   })
