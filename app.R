@@ -21,7 +21,7 @@ library(gghighlight)
 #Importation donnÃ©es
 smp = read_csv(file = "nbaNew.csv")
 
-#Enlever les 5 dernieres lignes : contenants beaucoup de virgules mais sans donnÃ©es
+#Enlever les 5 dernieres lignes : contenants beaucoup de virgules mais sans données
 nbligne=nrow(smp)
 nblignebis=nbligne-5
 nba=smp[-c(nblignebis:nbligne),]
@@ -100,17 +100,42 @@ ui = dashboardPage(
                 tags$div(
                   HTML(paste(tags$blockquote("Ici, on retrouve toutes les donnees des joueurs de la NBA depuis XXXX. Cette application est destinee pour les fan ou encore pour les curieux qui voudraient en apprendre davantage sur les caracteristiques et performance des", tags$span(style="color:red", "joueurs"), sep = "")))
                 ),
+                
+                valueBox(
+                  value = textOutput("nb_joueur"),
+                  subtitle = "Nombre de joueurs professionnels de la NBA",
+                  #icon = icon("usd"),
+                  color = "green",
+                  width = 4
+                ),
+                
+                valueBox(
+                  value = textOutput("nb_variable"),
+                  subtitle = "Nombre de variable affecte a chaque joueur professionnel de la NBA",
+                  #icon = icon("usd"),
+                  color = "green",
+                  width = 4
+                ),
+                tabBox(title = "Informations",
+                       width = 4,
+                       tabPanel(title = "Age moyen des joueurs de la NBA",
+                                tableOutput("info_age")
+                       ),
+                       tabPanel(title = "Salaire median des joueurs de la NBA",
+                                tableOutput("info_salaire")
+                       )
+                ),
                 box(
                   selectInput("club",
                               "Choisir un club",
-                              choices = sort(unique(smp$Tm))
+                              choices = sort(unique(nba$Tm))
                   )
                 ),
                 
                 box(
                   selectInput("saison_desc",
                               "Choisir une saison",
-                              choices = sort(unique(smp$SeasonStart))
+                              choices = sort(unique(nba$SeasonStart))
                   )
                 ),
                 tabBox(
@@ -360,7 +385,7 @@ ui = dashboardPage(
 server <- function(input, output) {
   
   output$joueurs = renderDataTable({
-    table = smp %>% filter(Tm == input$club & SeasonStart == input$saison_desc)
+    table = nba %>% filter(Tm == input$club & SeasonStart == input$saison_desc)
     datatable(
       data.frame(
         table
@@ -377,6 +402,38 @@ server <- function(input, output) {
                   color = 'white',
                   backgroundColor = 'steelblue',
                   fontWeight = 'bold')
+  })
+  
+  output$nb_joueur = renderText({
+    length(unique(nba$PlayerName))
+  })
+  
+  output$nb_variable = renderText({
+    ncol(nba)-1
+  })
+  
+  output$info_age = renderTable({
+    data.frame(
+      Statistique = c("Minimum", "Moyenne", "Mediane", "Maximum"),
+      Valeur = c(
+        min(nba$Age, na.rm = T),
+        mean(nba$Age, na.rm = T),
+        median(nba$Age, na.rm = T),
+        max(nba$Age, na.rm = T)
+      )
+    )
+  })
+  
+  output$info_salaire = renderTable({
+    data.frame(
+      Statistique = c("Minimum", "Moyenne", "Médiane", "Maximum"),
+      Valeur = c(
+        min(nba$PlayerSalary, na.rm = T),
+        mean(nba$PlayerSalary, na.rm = T),
+        median(nba$PlayerSalary, na.rm = T),
+        max(nba$PlayerSalary, na.rm = T)
+      )
+    )
   })
   
   
