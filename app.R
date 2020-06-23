@@ -202,7 +202,8 @@ ui = dashboardPage(
                  infoBox( 
                    title =" ",
                    width = 12,
-                   value = tags$p("Qui est le meilleur tireur ? A vous de comparer !", style = "font-size: 150%;"), 
+                   value = tags$p("Qui est le meilleur tireur ? A vous de comparer !", style = "font-size: 150%;"),
+                   subtitle = tags$p(htmlOutput("info_comp"), style = "font-size: 100%;"),
                    icon=icon("percent"),
                    color = "green",
                    fill = TRUE
@@ -560,10 +561,10 @@ server <- function(input, output) {
   })
   #Case anecdote sur le Triple Double
   output$texte_td = renderText({ 
-    paste("55 ans aprÃ¨s Robertson, Westbrook devient le deuxiÃ¨me joueur de 
-          l'histoire a rÃ©aliser un triple double de moyenne sur une saison.
-          Performance qu'il reproduira l'annÃ©e suivante, faisant de lui le seul joueur de l'histoire 
-          Ã  rÃ©aliser un
+    paste("55 ans après Robertson, Westbrook devient le deuxième joueur de 
+          l'histoire a réaliser un triple double de moyenne sur une saison.
+          Performance qu'il reproduira l'année suivante, faisant de lui le seul joueur de l'histoire 
+          à  réaliser un
           'back-to-back triple double'.")
   })
   #Radar plot 
@@ -635,6 +636,17 @@ server <- function(input, output) {
     Team1=equipe_choisi()
     NBA_equipe = nba %>% filter(Tm %in% Team1$Tm & Pos =="SF") %>%  group_by(PlayerName) %>% summarise(n=n(), TotalP= sum(PTS)) %>% arrange(desc(TotalP)) %>% slice(1:1)
     paste(NBA_equipe$TotalP, "Points marqués par ", NBA_equipe$PlayerName, " en ", NBA_equipe$n, "saisons")
+  })
+  
+  output$info_comp = renderUI({ 
+    p1 = paste("Signification des variables : ")
+    p2= paste("- XFG : Rapport entre les tirs marqués sur le terrain et les tirs tentés.")
+    p3= paste("- X3P : Rapport entre les tirs à 3 points marqués sur le terrain et les tirs à 3 points tentés.")
+    p4= paste("- X2P : Rapport entre les tirs à 2 points marqués sur le terrain et les tirs à 2 points tentés.")
+    p5= paste("- XeFG : Rapport entre les tirs marqués sur le terrain et les tirs tentés en prenant compte le fait que les tirs à 3 points rapportent plus de points.")
+    p6= paste("- XFT : Rapport entre les lancers francs marqués sur le terrain et les lancers francs tentés.")
+    
+    HTML(paste(p1,p2,p3,p4,p5,p6, sep="<br/>"))
   })
   
   #Box explication des postes
