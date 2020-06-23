@@ -92,14 +92,14 @@ ui = dashboardPage(
     tabItems(    
       tabItem("description",
               fluidRow(
-                tags$h2("Application SHINY sur la NBA !"),
+                tags$h2("   Application SHINY sur la NBA !"),
                 tags$div(
-                  HTML(paste(tags$blockquote("Ici, on retrouve toutes les donnees des joueurs de la NBA depuis XXXX. Cette application est destinee pour les fan ou encore pour les curieux qui voudraient en apprendre davantage sur les caracteristiques et performance des", tags$span(style="color:red", "joueurs"), sep = "")))
+                  HTML(paste(tags$blockquote("Ici, on retrouve toutes les données des joueurs de la NBA depuis 1950. Cette application est destinée aux fans mais aussi aux curieux qui voudraient en apprendre davantage sur les caractéristiques et performance des", tags$span(style="color:red", "joueurs"), sep = "")))
                 ),
                 
                 valueBox(
                   value = textOutput("nb_joueur"),
-                  subtitle = "Nombre de joueurs professionnels de la NBA",
+                  subtitle = "Nombre de joueurs professionnels en NBA recensés depuis 1950",
                   #icon = icon("usd"),
                   color = "green",
                   width = 4
@@ -107,17 +107,17 @@ ui = dashboardPage(
                 
                 valueBox(
                   value = textOutput("nb_variable"),
-                  subtitle = "Nombre de variable affecte a chaque joueur professionnel de la NBA",
+                  subtitle = "Nombre de variable affectée à chaque joueur professionnel de la NBA",
                   #icon = icon("usd"),
                   color = "green",
                   width = 4
                 ),
                 tabBox(title = "Informations",
                        width = 4,
-                       tabPanel(title = "Age moyen des joueurs de la NBA",
+                       tabPanel(title = "Age moyen des joueurs en NBA",
                                 tableOutput("info_age")
                        ),
-                       tabPanel(title = "Salaire median des joueurs de la NBA",
+                       tabPanel(title = "Salaire median des joueurs en NBA",
                                 tableOutput("info_salaire")
                        )
                 ),
@@ -143,7 +143,7 @@ ui = dashboardPage(
                 
               ),
               tags$div(
-                HTML(paste(tags$blockquote(tags$a(href="www.nba.com","SITE OFFICIEL DE LA", tags$span(style="color:red", "NBA"), sep = ""))))
+                HTML(paste(tags$blockquote(tags$a(href="www.nba.com","Cliquez pour aller sur le site officiel de la NBA"), sep = "")))
               )
       ),
       
@@ -380,8 +380,30 @@ ui = dashboardPage(
 
 server <- function(input, output) {
   
+  #Onglet 1, choix saison et club
+  
+  Onglet1_saison = reactive({
+    if (input$saison_desc == "") {
+      OngletS = nba %>%  filter(nba$SeasonStart == 1950)
+    } else {
+      OngletS = nba %>% filter(nba$SeasonStart == input$saison_desc)
+    }
+    OngletS
+  })
+  
+  Onglet1_club = reactive({
+    if (input$club == "") {
+      OngletC = nba %>%  filter(nba$Tm == "AND")
+    } else {
+      OngletC = nba %>% filter(nba$Tm == input$club)
+    }
+    OngletC
+  })
+  
   output$description = renderDataTable({
-    table = nba %>% filter(Tm == input$club & SeasonStart == input$saison_desc)
+    Saison = Onglet1_saison()
+    Club = Onglet1_club()
+    table = nba %>% filter(nba$SeasonStart == Saison$SeasonStart && nba$Tm == Club$Tm) %>%  select(-`#`, -SeasonStart) %>% arrange(desc(moypts))
     datatable(
       data.frame(
         table
@@ -391,7 +413,7 @@ server <- function(input, output) {
       options = list(
         dom = 'tip',
         scrollX = TRUE,
-        fixedColumns = list(leftColumn = 1, rightColumns = 1)
+        fixedColumns = list(leftColumn = 1, rightColumns = 3)
       )
     ) %>%
       formatStyle('PlayerName',
