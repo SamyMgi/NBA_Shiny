@@ -70,10 +70,6 @@ ui = dashboardPage(
                tabName = "description",
                icon = icon("info")),
       
-      menuItem("Statistiques descriptives",#DeuxiÃ¨me onglet
-               tabName = "joueurs",
-               icon = icon("table")
-      ),
       menuItem("Qui sont les meilleurs joueurs ?",#TroisÃ¨me onglet
                tabName = "meilleurs",
                icon = icon("medal")
@@ -94,7 +90,7 @@ ui = dashboardPage(
   ),
   dashboardBody(
     tabItems(    
-      tabItem("joueurs",
+      tabItem("description",
               fluidRow(
                 tags$h2("Application SHINY sur la NBA !"),
                 tags$div(
@@ -140,7 +136,7 @@ ui = dashboardPage(
                 ),
                 tabBox(
                   tabPanel(title = "Statistiques des joueurs",
-                           dataTableOutput("joueurs")
+                           dataTableOutput("description")
                   ),
                   width = 11
                 )
@@ -384,7 +380,7 @@ ui = dashboardPage(
 
 server <- function(input, output) {
   
-  output$joueurs = renderDataTable({
+  output$description = renderDataTable({
     table = nba %>% filter(Tm == input$club & SeasonStart == input$saison_desc)
     datatable(
       data.frame(
