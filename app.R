@@ -18,7 +18,7 @@ library(gghighlight)
 
 #nba <- read.csv2("nbaNew.csv", sep=",")
 
-#Importation donnÃ©es
+#Importation données
 smp = read_csv(file = "nbaNew.csv")
 
 #Enlever les 5 dernieres lignes : contenants beaucoup de virgules mais sans données
@@ -31,13 +31,13 @@ colors_border=c( rgb(0.2,0.5,0.8,0.9), rgb(1,0,0,0.6) , rgb(0.7,0.5,0.1,0.9) )
 colors_in=c( rgb(0.2,0.5,0.8,0.4), rgb(1,0,0,0.3) , rgb(0.7,0.5,0.1,0.4) )
 
 
-#CrÃ©ation des colonnes moyennes (Points, Rebonds, Passes dÃÂ©cisives)
+#Création des colonnes moyennes (Points, Rebonds, Passes décisives)
 nba <- mutate(nba, moypts = round(nba$PTS / nba$G, 1), moyreb = round(nba$TRB / nba$G, 1), moypad = round(nba$AST / nba$G, 1))
 
 #Création bdd avec uniquement les 32 équipes actuelles pour l'onglet stat par équipe
 nba_teamactuel = nba  %>% filter(Tm %in% c("ATL", "BRK", "BOS", "CHA","CHI","CLE","DAL", "DEN", "DET", "GSW", "HOU", "IND", "LAC", "LAL", "MEM", "MIA", "MIL", "MIN", "NOP", "NYK", "OKC", "ORL", "PHI", "PHX", "POR", "SAC", "SAS", "TOR", "UTA", "WAS"))
 
-#Et classement en fonction de l'annÃ©e
+#Et classement en fonction de l'année
 nba <- nba %>% arrange(desc(SeasonStart))
 nba
 
@@ -48,7 +48,7 @@ nba <- rename.variable(nba, "3P%", "X3P")
 nba <- rename.variable(nba, "2P%", "X2P")
 nba <- rename.variable(nba, "FT%", "XFT")
 
-#Recodage des variables : caractÃ¨re -> numÃ©rique
+#Recodage des variables : caractère -> numérique
 nba$XFG<-as.numeric(gsub("%","",as.character(nba$XFG)))
 nba$XeFG<-as.numeric(gsub("%","",as.character(nba$XeFG)))
 nba$X3P<-as.numeric(gsub("%","",as.character(nba$X3P)))
@@ -61,6 +61,9 @@ nba$PlayerSalary<-gsub(',','',as.character(nba$PlayerSalary))
 nba$PlayerSalary <- substring(nba$PlayerSalary, 2)
 nba$PlayerSalary<-as.numeric(nba$PlayerSalary)
 
+#Base sans 1950 
+nba_sm <- nba %>% filter(SeasonStart > 1950 & Pos %in% c("PF", "PG", "SF", "C", "SG")) %>% select('#', PlayerName, SeasonStart, Pos, moypts, moyreb, moypad)
+
 ui = dashboardPage(
   
   dashboardHeader(
@@ -72,22 +75,24 @@ ui = dashboardPage(
                tabName = "description",
                icon = icon("info")),
       
-      menuItem("Qui sont les meilleurs joueurs ?",#TroisÃ¨me onglet
+      menuItem("Qui sont les meilleurs joueurs ?",#Deuxième onglet
                tabName = "meilleurs",
                icon = icon("medal")
       ),
-      menuItem("Comparez-les !", #QuatriÃ¨me onglet
+      menuItem("Comparez-les !", #Troisième onglet
                tabName = "comp_joueurs",
                icon = icon("not-equal")
       ),
-      menuItem("Statistiques pour chaque joueur", #CinquiÃ¨me onglet
+      menuItem("Statistiques pour chaque joueur", #Quatrième onglet
                tabName="stat_joueur",
                icon = icon("chart-line")
                ),
-      menuItem("Statistiques pour chaque équipe", #CinquiÃ¨me onglet
+      menuItem("Statistiques pour chaque équipe", #Cinquième onglet
                tabName="stat_equipe",
                icon = icon("chart-line")
-      )
+      ),
+      menuItem("Clustering", #Sixième onglet
+               tabName = "cluster_joueur")
               )
   ),
   dashboardBody(
@@ -198,7 +203,7 @@ ui = dashboardPage(
               
               
               
-      ), #Forme du deuxiÃ¨me onglet
+      ), #Forme du deuxième onglet
       tabItem("comp_joueurs",
                fluidRow(
                  infoBox( 
@@ -238,7 +243,7 @@ ui = dashboardPage(
                  
                )
                ),
-      #Forme du troisiÃ¨me onglet
+      #Forme du troisième onglet
       tabItem("stat_joueur",
             fluidRow(
               column(width = 6, 
@@ -373,7 +378,28 @@ ui = dashboardPage(
                 )
                 
               ) )    
-      )
+      ),
+      #Forme dernier onglet
+      tabItem("cluster_joueur",
+              fluidRow(
+                box(
+                  width = 3,
+                  selectInput("saison_sm",
+                              "Choix de la saison",
+                              choices = c(
+                                unique(nba_sm$SeasonStart)
+                              ))
+                ),
+                
+                tabBox(title = "Comparaison",
+                       width = 5,
+                       tabPanel(title = "Comparaison Groupe et Poste",
+                                tableOutput("compa")
+                       )
+                )
+              )
+              
+      ) 
   
     ) 
   ),
@@ -456,7 +482,7 @@ server <- function(input, output) {
     }
     onlyplayers
   })
-  #2Ã¨me choix de joueur pour le radarplot
+  #2ème choix de joueur pour le radarplot
   choix_joueur2 = reactive({
     if (input$joueur2 == "Tous les joueurs") {
       onlyplayers2 = nba %>% filter(nba$PlayerName=="Kobe Bryant")
@@ -527,7 +553,7 @@ server <- function(input, output) {
     })
     
   
-  #CrÃ©ation de deux infobox qui indiquent les meilleurs statistiques pour le joueur choisi
+  #Création de deux infobox qui indiquent les meilleurs statistiques pour le joueur choisi
   output$point_joueur = renderText({
     joueur_choisi1=joueur_choisi()
     NBA_joueur = nba %>% filter(PlayerName %in% joueur_choisi1$PlayerName) %>%  select(SeasonStart, moypts, moyreb, moypad) %>% arrange(desc(moypts)) %>% slice(1:1)
@@ -549,7 +575,7 @@ server <- function(input, output) {
   
   
   
-  #ReprÃ©sentation des triple double de moyenne
+  #Représentation des triple double de moyenne
   output$triple_double = renderTable({ 
     nba %>% 
       filter(moypts>=10 & moyreb>=10 & moypad>=10) %>% 
@@ -566,7 +592,7 @@ server <- function(input, output) {
     paste("55 ans après Robertson, Westbrook devient le deuxième joueur de 
           l'histoire a réaliser un triple double de moyenne sur une saison.
           Performance qu'il reproduira l'année suivante, faisant de lui le seul joueur de l'histoire 
-          à  réaliser un
+          à réaliser un
           'back-to-back triple double'.")
   })
   #Radar plot 
@@ -688,6 +714,21 @@ server <- function(input, output) {
     }
   })
   
+  
+  #Kmeans
+  output$compa = renderTable({
+    data = nba_sm %>% filter(SeasonStart==input$saison_sm)
+    data2 = data %>% select(-'#', -Pos, -SeasonStart ,-PlayerName)
+    datastd <- scale(data2)
+    Cluster_kmeans = kmeans(datastd, 5, nstart = 50)
+    #Fusion
+    data$cluster_kmeans = factor(Cluster_kmeans$cluster)
+    
+    x = table(data$cluster_kmeans, data$Pos)
+    x
+  })
+  
+
   
 }
 
