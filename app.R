@@ -57,7 +57,9 @@ nba$XFT<-as.numeric(gsub("%","",as.character(nba$XFT)))
 nba$X3P=100*nba$X3P
 nba$SeasonStart=as.character(nba$SeasonStart)
 
-
+nba$PlayerSalary<-gsub(',','',as.character(nba$PlayerSalary))
+nba$PlayerSalary <- substring(nba$PlayerSalary, 2)
+nba$PlayerSalary<-as.numeric(nba$PlayerSalary)
 
 ui = dashboardPage(
   
