@@ -90,9 +90,7 @@ ui = dashboardPage(
       menuItem("Statistiques pour chaque équipe", #Cinquième onglet
                tabName="stat_equipe",
                icon = icon("chart-line")
-      ),
-      menuItem("Clustering", #Sixième onglet
-               tabName = "cluster_joueur")
+      )
               )
   ),
   dashboardBody(
@@ -378,29 +376,7 @@ ui = dashboardPage(
                 )
                 
               ) )    
-      ),
-      #Forme dernier onglet
-      tabItem("cluster_joueur",
-              fluidRow(
-                box(
-                  width = 3,
-                  selectInput("saison_sm",
-                              "Choix de la saison",
-                              choices = c(
-                                unique(nba_sm$SeasonStart)
-                              ))
-                ),
-                
-                tabBox(title = "Comparaison",
-                       width = 5,
-                       tabPanel(title = "Comparaison Groupe et Poste",
-                                tableOutput("compa")
-                       )
-                )
-              )
-              
-      ) 
-  
+      )
     ) 
   ),
   title = "titre dans le navigateur",
@@ -713,21 +689,6 @@ server <- function(input, output) {
       img(src = photo, height="200px", width = "200px")
     }
   })
-  
-  
-  #Kmeans
-  output$compa = renderTable({
-    data = nba_sm %>% filter(SeasonStart==input$saison_sm)
-    data2 = data %>% select(-'#', -Pos, -SeasonStart ,-PlayerName)
-    datastd <- scale(data2)
-    Cluster_kmeans = kmeans(datastd, 5, nstart = 50)
-    #Fusion
-    data$cluster_kmeans = factor(Cluster_kmeans$cluster)
-    
-    x = table(data$cluster_kmeans, data$Pos)
-    x
-  })
-  
 
   
 }
